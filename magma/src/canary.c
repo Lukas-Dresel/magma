@@ -73,6 +73,7 @@ void magma_log(const char *bug, int condition)
         memcpy(data_ptr->consumer_buffer, data_ptr->producer_buffer, sizeof(data_t));
         // memory barrier
         __sync_synchronize();
+        msync(data_ptr->consumer_buffer, sizeof(data_t), MS_SYNC);
         data_ptr->consumed = false;
     }
 
