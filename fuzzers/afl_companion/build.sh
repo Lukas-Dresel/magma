@@ -30,17 +30,26 @@ export PATH=$PATH:~/.cargo/bin
     cd "$FUZZER/symcc"
     export CXXFLAGS="$CXXFLAGS -DNDEBUG"
 
-    if [[ "$FUZZER" == *"symcc"* ]]; then
-        mkdir -p build_qsym
-        pushd build_qsym
-        cmake -G Ninja ../ \
-            -DQSYM_BACKEND=ON \
-            -DZ3_TRUST_SYSTEM_VERSION=ON \
-            -DCMAKE_BUILD_TYPE=Release
-        ninja -j 4
-        popd
-    fi
+    ######### SIMPLE BACKEND #########
+    mkdir -p build_simple
+    pushd build_simple
+    cmake -G Ninja ../ \
+        -DZ3_TRUST_SYSTEM_VERSION=ON \
+        -DCMAKE_BUILD_TYPE=Release
+    ninja -j 4
+    popd
 
+    ######### QSYM BACKEND #########
+    mkdir -p build_qsym
+    pushd build_qsym
+    cmake -G Ninja ../ \
+        -DQSYM_BACKEND=ON \
+        -DZ3_TRUST_SYSTEM_VERSION=ON \
+        -DCMAKE_BUILD_TYPE=Release
+    ninja -j 4
+    popd
+
+    ######### RUST BACKEND #########
     mkdir -p build
     pushd build
     cmake -G Ninja ../ \
