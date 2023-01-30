@@ -15,5 +15,11 @@ mkdir -p "$SHARED/findings"
 
 export AFL_SKIP_CPUFREQ=1
 export AFL_NO_AFFINITY=1
-"$FUZZER/repo/afl-fuzz" -m 100M -L 0 -i "$TARGET/corpus/$PROGRAM" -o "$SHARED/findings" \
-    $FUZZARGS -- "$OUT/$PROGRAM" $ARGS 2>&1
+
+"$FUZZER/repo/afl-fuzz" -S afl-secondary -m 100M -L 0 -i "$TARGET/corpus/$PROGRAM" -o "$SHARED/findings" \
+    $FUZZARGS -- "$OUT/$PROGRAM" $ARGS 2>&1 &
+
+"$FUZZER/repo/afl-fuzz" -M afl-main -m 100M -L 0 -i "$TARGET/corpus/$PROGRAM" -o "$SHARED/findings" \
+    $FUZZARGS -- "$OUT/$PROGRAM" $ARGS 2>&1 &
+
+fg
