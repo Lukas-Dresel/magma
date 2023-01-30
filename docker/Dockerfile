@@ -39,9 +39,10 @@ ARG magma_path=magma
 ENV MAGMA 	${MAGMA_R}/${magma_path}
 USER root:root
 RUN mkdir -p ${MAGMA} && chown magma:magma ${MAGMA}
-COPY --chown=magma:magma ${magma_root}/${magma_path} ${MAGMA}/
+COPY --chown=magma:magma ${magma_root}/${magma_path}/preinstall.sh ${MAGMA}/preinstall.sh
 RUN ${MAGMA}/preinstall.sh
 USER magma:magma
+COPY --chown=magma:magma ${magma_root}/${magma_path} ${MAGMA}/
 RUN ${MAGMA}/prebuild.sh
 
 ARG fuzzer_name
@@ -49,9 +50,10 @@ ARG fuzzer_path=fuzzers/${fuzzer_name}
 ENV FUZZER 	${MAGMA_R}/${fuzzer_path}
 USER root:root
 RUN mkdir -p ${FUZZER} && chown magma:magma ${FUZZER}
-COPY --chown=magma:magma ${magma_root}/${fuzzer_path} ${FUZZER}/
+COPY --chown=magma:magma ${magma_root}/${fuzzer_path}/preinstall.sh ${FUZZER}/
 RUN ${FUZZER}/preinstall.sh
 USER magma:magma
+COPY --chown=magma:magma ${magma_root}/${fuzzer_path} ${FUZZER}/
 RUN ${FUZZER}/fetch.sh
 RUN ${FUZZER}/build.sh
 
