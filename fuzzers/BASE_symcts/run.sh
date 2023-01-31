@@ -48,12 +48,12 @@ if [[ "$FUZZER" == *"afl"* ]]; then
 
     FUZZER_PID=$!
 
-    "$FUZZER/afl/afl-fuzz" \
-        -S havoc \
-        -i "$TARGET/corpus/$PROGRAM" \
-        -o "$SHARED/findings" \
-        "${flag_cmplog[@]}" -d \
-        $FUZZARGS -- "$OUT/afl/$PROGRAM" $ARGS 2>&1 &
+    # "$FUZZER/afl/afl-fuzz" \
+    #     -S havoc \
+    #     -i "$TARGET/corpus/$PROGRAM" \
+    #     -o "$SHARED/findings" \
+    #     "${flag_cmplog[@]}" -d \
+    #     $FUZZARGS -- "$OUT/afl/$PROGRAM" $ARGS 2>&1 &
 fi
 
 if [[ "$FUZZER" == *"symcts"* ]]; then
@@ -84,7 +84,7 @@ if [[ "$FUZZER" == *"symcts"* ]]; then
         -- "${COMMAND[@]}" $ARGS 2>&1 &
 else
     # this is in the elf so it only starts the custom drivers if it's not SyMCTS based
-    if [[ "$FUZZER" == *"symcc"* ]]; then
+    if [[ "$FUZZER" == *"symcc"* || "$FUZZER" == *"symqemu"* ]]; then
         echo "Fuzzer main node has been started with PID $FUZZER_PID, waiting for it to come up"
 
         while ps -p $FUZZER_PID > /dev/null 2>&1 && \
