@@ -27,13 +27,13 @@ export LIBS="$LIBS -l:afl_driver.o -lstdc++"
     export CC="$FUZZER/symsan/bin/ko-clang"
     export CXX="$FUZZER/symsan/bin/ko-clang++"
 
-    export LDFLAGS="$LDFLAGS -L$OUT"
     export CFLAGS="$CFLAGS -DNOT_SYMBOLIZED"
 
     cd "$FUZZER/symcc_libc_preload"
 
     (
         export OUT="$OUT/symsantrack"
+        export LDFLAGS="$LDFLAGS -L$OUT"
         export USE_TRACK=1
 
         make -j $(nproc) libc_symcc_preload.a
@@ -41,6 +41,7 @@ export LIBS="$LIBS -l:afl_driver.o -lstdc++"
     )
     (
         export OUT="$OUT/symsanfast"
+        export LDFLAGS="$LDFLAGS -L$OUT"
 
         make -j $(nproc) libc_symcc_preload.a
         cp libc_symcc_preload.a "$OUT/"

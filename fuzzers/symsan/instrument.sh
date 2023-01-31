@@ -23,36 +23,36 @@ export LIBS="$LIBS -l:afl_driver.o -lstdc++"
     "$TARGET/build.sh"
 )
 
+# (
+#     export CC="$FUZZER/symsan/bin/ko-clang"
+#     export CXX="$FUZZER/symsan/bin/ko-clang++"
+
+#     export CFLAGS="$CFLAGS -DNOT_SYMBOLIZED"
+
+#     cd "$FUZZER/symcc_libc_preload"
+
+#     (
+#         export OUT="$OUT/symsantrack"
+#         export LDFLAGS="$LDFLAGS -L$OUT"
+#         export USE_TRACK=1
+
+#         make -j $(nproc)
+#         cp libc_symcc_preload.a "$OUT/"
+#     )
+#     (
+#         export OUT="$OUT/symsanfast"
+#         export LDFLAGS="$LDFLAGS -L$OUT"
+
+#         make -j $(nproc)
+#         cp libc_symcc_preload.a "$OUT/"
+#     )
+# )
+
 (
     export CC="$FUZZER/symsan/bin/ko-clang"
     export CXX="$FUZZER/symsan/bin/ko-clang++"
 
-    export CFLAGS="$CFLAGS -DNOT_SYMBOLIZED"
-
-    cd "$FUZZER/symcc_libc_preload"
-
-    (
-        export OUT="$OUT/symsantrack"
-        export LDFLAGS="$LDFLAGS -L$OUT"
-        export USE_TRACK=1
-
-        make -j $(nproc) libc_symcc_preload.a
-        cp libc_symcc_preload.a "$OUT/"
-    )
-    (
-        export OUT="$OUT/symsanfast"
-        export LDFLAGS="$LDFLAGS -L$OUT"
-
-        make -j $(nproc) libc_symcc_preload.a
-        cp libc_symcc_preload.a "$OUT/"
-    )
-)
-
-(
-    export CC="$FUZZER/symsan/bin/ko-clang"
-    export CXX="$FUZZER/symsan/bin/ko-clang++"
-
-    export LIBS="$LIBS -l:libc_symcc_preload.a"
+    # export LIBS="$LIBS -l:libc_symcc_preload.a"
 
     (
         export OUT="$OUT/symsantrack"

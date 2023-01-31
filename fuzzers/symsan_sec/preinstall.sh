@@ -22,4 +22,3 @@ rm -rf /usr/local/include/llvm && rm -rf /usr/local/include/llvm-c
 rm -rf /usr/include/llvm && rm -rf /usr/include/llvm-c
 ln -s /usr/lib/llvm-6.0/include/llvm /usr/include/llvm
 ln -s /usr/lib/llvm-6.0/include/llvm-c /usr/include/llvm-c
-

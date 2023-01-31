@@ -21,9 +21,9 @@ export RUST_LOG=info
 
 FUZZER_PID=$!
 
-"$FUZZER/afl/afl-fuzz" -S afl-secondary -m 100M -i "$TARGET/corpus/$PROGRAM" \
-    -o "$SHARED/findings" \
-    -- "$OUT/afl/$PROGRAM" $ARGS 2>&1 &
+# "$FUZZER/afl/afl-fuzz" -S afl-secondary -m 100M -i "$TARGET/corpus/$PROGRAM" \
+#     -o "$SHARED/findings" \
+#     -- "$OUT/afl/$PROGRAM" $ARGS 2>&1 &
 
 while ps -p $FUZZER_PID > /dev/null 2>&1 && \
     [[ ! -f "$SHARED/findings/afl-master/fuzzer_stats" ]]; do

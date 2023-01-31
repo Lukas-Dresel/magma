@@ -13,9 +13,9 @@
 
 . ~/.bashrc
 
-if nm "$OUT/afl/$PROGRAM" | grep -E '^[0-9a-f]+\s+[Ww]\s+main$'; then
-    ARGS="-"
-fi
+# if nm "$OUT/afl/$PROGRAM" | grep -E '^[0-9a-f]+\s+[Ww]\s+main$'; then
+#     ARGS="-"
+# fi
 
 mkdir -p "$SHARED/findings"
 
@@ -94,12 +94,14 @@ else
 
         if [[ "$FUZZER" == *"symqemu"* ]]; then
             COMMAND=("$FUZZER/symqemu/build/x86_64-linux-user/symqemu-x86_64" "$OUT/vanilla/$PROGRAM")
+            NAME=symqemu
         else
             COMMAND=("$OUT/symcts/$PROGRAM")
+            NAME=symcc
         fi
         echo "Fuzzer should be up, let's see if it's still running, expecting to see fuzzer_stats"
         "$FUZZER/symcc/util/symcc_fuzzing_helper/target/release/symcc_fuzzing_helper" \
-            -a afl-main -o "$SHARED/findings" -n symcc \
+            -a afl-main -o "$SHARED/findings" -n "$NAME" \
             -- "${COMMAND[@]}" $ARGS 2>&1 &
     fi
 
@@ -110,6 +112,4 @@ else
     fi
 fi
 
-
-fg
-
+wait

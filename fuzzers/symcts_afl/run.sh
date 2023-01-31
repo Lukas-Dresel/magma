@@ -13,9 +13,9 @@
 
 . ~/.bashrc
 
-if nm "$OUT/afl/$PROGRAM" | grep -E '^[0-9a-f]+\s+[Ww]\s+main$'; then
-    ARGS="-"
-fi
+# if nm "$OUT/afl/$PROGRAM" | grep -E '^[0-9a-f]+\s+[Ww]\s+main$'; then
+#     ARGS="-"
+# fi
 
 mkdir -p "$SHARED/findings"
 
@@ -48,12 +48,12 @@ if [[ "$FUZZER" == *"afl"* ]]; then
 
     FUZZER_PID=$!
 
-    "$FUZZER/afl/afl-fuzz" \
-        -S havoc \
-        -i "$TARGET/corpus/$PROGRAM" \
-        -o "$SHARED/findings" \
-        "${flag_cmplog[@]}" -d \
-        $FUZZARGS -- "$OUT/afl/$PROGRAM" $ARGS 2>&1 &
+    # "$FUZZER/afl/afl-fuzz" \
+    #     -S havoc \
+    #     -i "$TARGET/corpus/$PROGRAM" \
+    #     -o "$SHARED/findings" \
+    #     "${flag_cmplog[@]}" -d \
+    #     $FUZZARGS -- "$OUT/afl/$PROGRAM" $ARGS 2>&1 &
 fi
 
 if [[ "$FUZZER" == *"symcts"* ]]; then
@@ -84,7 +84,7 @@ if [[ "$FUZZER" == *"symcts"* ]]; then
         -- "${COMMAND[@]}" $ARGS 2>&1 &
 else
     # this is in the elf so it only starts the custom drivers if it's not SyMCTS based
-    if [[ "$FUZZER" == *"symcc"* ]]; then
+    if [[ "$FUZZER" == *"symcc"* || "$FUZZER" == *"symqemu"* ]]; then
         echo "Fuzzer main node has been started with PID $FUZZER_PID, waiting for it to come up"
 
         while ps -p $FUZZER_PID > /dev/null 2>&1 && \
@@ -94,12 +94,14 @@ else
 
         if [[ "$FUZZER" == *"symqemu"* ]]; then
             COMMAND=("$FUZZER/symqemu/build/x86_64-linux-user/symqemu-x86_64" "$OUT/vanilla/$PROGRAM")
+            NAME=symqemu
         else
             COMMAND=("$OUT/symcts/$PROGRAM")
+            NAME=symcc
         fi
         echo "Fuzzer should be up, let's see if it's still running, expecting to see fuzzer_stats"
         "$FUZZER/symcc/util/symcc_fuzzing_helper/target/release/symcc_fuzzing_helper" \
-            -a afl-main -o "$SHARED/findings" -n symcc \
+            -a afl-main -o "$SHARED/findings" -n "$NAME" \
             -- "${COMMAND[@]}" $ARGS 2>&1 &
     fi
 
@@ -110,6 +112,4 @@ else
     fi
 fi
 
-
-fg
-
+wait

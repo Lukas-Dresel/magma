@@ -35,6 +35,18 @@ for seed in "$TARGET/corpus/$PROGRAM"/*; do
     fi
 done
 
+set -x
+# if NO_CORPUS=yes, delete the corpus and replace it with a basic one
+if echo "$NO_CORPUS" | grep yes; then
+    for f in "$TARGET/corpus/$PROGRAM"/*; do
+        rm -rf "$f"
+    done
+    dd if=/dev/zero bs=256 count=1 of="$TARGET/corpus/$PROGRAM/input_256"
+    dd if=/dev/zero bs=1024 count=1 of="$TARGET/corpus/$PROGRAM/input_1024"
+    dd if=/dev/zero bs=4096 count=1 of="$TARGET/corpus/$PROGRAM/input_4096"
+fi
+set +x
+
 shopt -s nullglob
 seeds=("$1"/*)
 shopt -u nullglob
@@ -42,6 +54,7 @@ if [ ${#seeds[@]} -eq 0 ]; then
     echo "No seeds remaining! Campaign will not be launched."
     exit 1
 fi
+
 
 
 # launch the fuzzer in parallel with the monitor
@@ -68,13 +81,22 @@ done &
 
 echo "Campaign launched at $(date '+%F %R')"
 
+set -x
+
 timeout $TIMEOUT "$FUZZER/run.sh" | \
     multilog n2 s$LOGSIZE "$SHARED/log"
+
+RETVAL_TIMEOUT="${PIPESTATUS[0]}"
+RETVAL_MULTILOG="${PIPESTATUS[1]}"
 
 if [ -f "$SHARED/log/current" ]; then
     cat "$SHARED/log/current"
 fi
 
-echo "Campaign terminated at $(date '+%F %R')"
+echo "Campaign terminated at $(date '+%F %R'):"
+echo "  - exit code (run):      $RETVAL_TIMEOUT"
+echo "  - exit code (multilog): $RETVAL_MULTILOG"
 
 kill $(jobs -p)
+
+set +x

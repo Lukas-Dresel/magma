@@ -19,6 +19,8 @@ git clone https://github.com/madler/zlib.git "$FUZZER/zlib"
     git checkout 2937d1c029abeab1b0de70705c393e8485617266
     popd
 )
+cat "$FUZZER/abilist_extra.txt" >> "$FUZZER/symsan/llvm_mode/dfsan_rt/dfsan/done_abilist.txt"
+
 #git clone --no-checkout https://github.com/Z3Prover/z3.git "$FUZZER/z3"
 #git -C "$FUZZER/z3" checkout z3-4.8.12
 

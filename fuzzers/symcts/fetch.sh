@@ -6,7 +6,7 @@ set -e
 # - env FUZZER: path to fuzzer work dir
 ##
 
-RERUN=49
+RERUN=51
 
 # sudo chown -R magma:magma "$FUZZER/z3"
 # sudo chown -R magma:magma "$FUZZER/llvm"
