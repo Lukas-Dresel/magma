@@ -6,7 +6,7 @@ set -e
 # - env FUZZER: path to fuzzer work dir
 ##
 
-RERUN=51
+RERUN=76
 
 # sudo chown -R magma:magma "$FUZZER/z3"
 # sudo chown -R magma:magma "$FUZZER/llvm"
@@ -25,6 +25,8 @@ git clone https://github.com/Lukas-Dresel/zlib-nop.git "$FUZZER/zlib-nop"
 git clone https://github.com/Lukas-Dresel/symcc_libc_preload.git "$FUZZER/mctsse/repos/symcc_libc_preload"
 
 git clone https://github.com/AFLPlusPlus/AFLPlusPlus.git "$FUZZER/afl"
+
+git clone -b feat/larger_counters https://github.com/Lukas-Dresel/AFLPlusPlus.git "$FUZZER/afl-symcts"
 
 # if [[ "$FUZZER" == *"symcts"* ]]; then
 git clone --depth=1 https://github.com/Lukas-Dresel/symcc "$FUZZER/symcc"

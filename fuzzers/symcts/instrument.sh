@@ -19,11 +19,13 @@ export CFLAGS="$CFLAGS $SANITIZER_FLAGS"
 export CXXFLAGS="$CXXFLAGS $SANITIZER_FLAGS"
 export LDFLAGS="$LDFLAGS $SANITIZER_FLAGS"
 
+# export LIBS="$LIBS -lstdc++"
 export LIBS="$LIBS -l:afl_driver.o -lstdc++"
 (
     export OUT="$OUT/vanilla"
     mkdir -p "$OUT"
     export LDFLAGS="$LDFLAGS -L$OUT"
+    export LIB_FUZZING_ENGINE="afl_driver.o"
     "$MAGMA/build.sh"
     "$TARGET/build.sh"
 )
@@ -34,17 +36,32 @@ export LIBS="$LIBS -l:afl_driver.o -lstdc++"
 
     export OUT="$OUT/afl"
     export LDFLAGS="$LDFLAGS -L$OUT"
+    export LIB_FUZZING_ENGINE="afl_driver.o"
     mkdir -p "$OUT"
 
     "$MAGMA/build.sh"
     "$TARGET/build.sh"
 )
 (
+    export CC="$FUZZER/afl-symcts/afl-clang-fast"
+    export CXX="$FUZZER/afl-symcts/afl-clang-fast++"
+
+    export OUT="$OUT/afl-symcts"
+    export LDFLAGS="$LDFLAGS -L$OUT"
+    export LIB_FUZZING_ENGINE="afl_driver.o"
+    mkdir -p "$OUT"
+
+    "$MAGMA/build.sh"
+    "$TARGET/build.sh"
+)
+
+(
     export CC="$FUZZER/afl/afl-clang-fast"
     export CXX="$FUZZER/afl/afl-clang-fast++"
 
     export OUT="$OUT/cmplog"
     export LDFLAGS="$LDFLAGS -L$OUT"
+    export LIB_FUZZING_ENGINE="afl_driver.o"
     mkdir -p "$OUT"
 
     export AFL_LLVM_CMPLOG=1
@@ -62,6 +79,7 @@ if [[ "$FUZZER" != *"symqemu"* && "$FUZZER" == *"sym"* ]]; then
         export OUT="$OUT/symcts"
         export LDFLAGS="$LDFLAGS -L$OUT"
         export LIBS="$LIBS -l:libc_symcc_preload.a"
+        export LIB_FUZZING_ENGINE="$OUT/afl_driver.o"
 
         export SYMCC_LIBCXX_PATH="$FUZZER/llvm/libcxx_symcc_install"
         export SYMCC_NO_SYMBOLIC_INPUT=1

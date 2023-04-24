@@ -43,7 +43,6 @@ if [[ "$FUZZER" == *"afl"* ]]; then
         -i "$TARGET/corpus/$PROGRAM" \
         -o "$SHARED/findings" \
         "${SYNC_FLAG_MASTER[@]}" \
-        "${flag_cmplog[@]}" -d \
         $FUZZARGS -- "$OUT/afl/$PROGRAM" $ARGS 2>&1 &
 
     FUZZER_PID=$!
@@ -57,33 +56,26 @@ if [[ "$FUZZER" == *"afl"* ]]; then
 fi
 
 if [[ "$FUZZER" == *"symcts"* ]]; then
-    FEATURES=()
-
-    if [[ "$FUZZER" == *"afl"* ]]; then
-        FEATURES+=("--features sync_from_other_fuzzers")
-    fi
-    if [[ "$FUZZER" == *"context_sensitive"* ]]; then
-        FEATURES+=("--features context_sensitive_coverage")
-    fi
 
     if [[ "$FUZZER" == *"symqemu"* ]]; then
-        COMMAND=("$FUZZER/symqemu/build/x86_64-linux-user/symqemu-x86_64" "$OUT/vanilla/$PROGRAM")
+        CONCOLIC_EXECUTION_MODE="symqemu"
     else
-        COMMAND=("$OUT/symcts/$PROGRAM")
+        CONCOLIC_EXECUTION_MODE="symcc"
     fi
 
-    if [[ "$FUZZER" != *"decision_coverage"* ]]; then
-        export SYMCC_TRACE_LOCATIONS=1
-    fi
-
-    cd "$FUZZER/mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/"
-    cargo run --release "${FEATURES[@]}" --bin symcts -- \
+    cd "$FUZZER/mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer/" || exit 1
+    RUST_BACKTRACE=1 RUST_LOG=INFO ./target/release/symcts \
         -n "symcts" \
         -i "$TARGET/corpus/$PROGRAM" \
         -s "$SHARED/findings/" \
-        -- "${COMMAND[@]}" $ARGS 2>&1 &
+        --afl-coverage-target "$OUT/afl-symcts/$PROGRAM" \
+        --symcc-target "$OUT/symcts/$PROGRAM" \
+        --vanilla-target "$OUT/vanilla/$PROGRAM" \
+        --concolic-execution-mode "$CONCOLIC_EXECUTION_MODE" \
+        --symqemu "$FUZZER/symqemu/build/x86_64-linux-user/symqemu-x86_64" \
+        -- $ARGS 2>&1
 else
-    # this is in the elf so it only starts the custom drivers if it's not SyMCTS based
+    # this is the else so the custom drivers only start if it's not SyMCTS based
     if [[ "$FUZZER" == *"symcc"* || "$FUZZER" == *"symqemu"* ]]; then
         echo "Fuzzer main node has been started with PID $FUZZER_PID, waiting for it to come up"
 
@@ -102,14 +94,8 @@ else
         echo "Fuzzer should be up, let's see if it's still running, expecting to see fuzzer_stats"
         "$FUZZER/symcc/util/symcc_fuzzing_helper/target/release/symcc_fuzzing_helper" \
             -a afl-main -o "$SHARED/findings" -n "$NAME" \
-            -- "${COMMAND[@]}" $ARGS 2>&1 &
-    fi
-
-    if [[ "$FUZZER" == *"symsan"* ]]; then
-        "$FUZZER/symsan/target/release/fastgen" \
-            --sync_afl -i "$TARGET/corpus/$PROGRAM" -t "$OUT/symsantrack/$PROGRAM" -o "$SHARED/findings"  \
-            -- "$OUT/symsanfast/$PROGRAM" $ARGS &> "$SHARED/symsan.log"
+            -- "${COMMAND[@]}" $ARGS 2>&1
+    else
+        wait
     fi
 fi
-
-wait

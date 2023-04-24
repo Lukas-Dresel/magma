@@ -7,6 +7,8 @@ set -x
 # - env FUZZER: path to fuzzer work dir
 ##
 
+echo RERUN=0
+
 if [ ! -d "$FUZZER/afl" ] || [ ! -d "$FUZZER/symcc" ] || \
    [ ! -d "$FUZZER/z3" ] || [ ! -d "$FUZZER/mctsse" ] || ([[ "$FUZZER" != *"symqemu"* ]] && [ ! -d "$FUZZER/llvm" ]); then
     echo "fetch.sh must be executed first."
@@ -21,7 +23,11 @@ fi
 
     export PATH=$PATH:~/.cargo/bin
     echo PATH="$PATH:~/.cargo/bin" >> ~/.bashrc
-    rustup default nightly-2022-09-18
+    if [[ "$FUZZER" != *"symsan"* ]]; then
+        rustup default nightly-2022-09-18
+    else
+        rustup default nightly-2021-09-18 # older cargo for symsan
+    fi
 )
 export PATH=$PATH:~/.cargo/bin
 
@@ -79,7 +85,7 @@ echo "source '$FUZZER/symcc_env.sh'" >> ~/.bashrc
 source "$FUZZER/symcc_env.sh"
 
 # prepare output dirs
-mkdir -p "$OUT/"{afl,symcts,vanilla,cmplog}
+mkdir -p "$OUT/"{afl,afl-symcts,symcts,vanilla,cmplog}
 
 # build symcc_preload_lib with qsort and bsearch
 if [[ "$FUZZER" == *"sym"* ]]; then
@@ -114,9 +120,18 @@ fi
 
 # build AFL
 (
-    cp "$FUZZER/src/afl_driver.cpp" "$FUZZER/afl/afl_driver.cpp"
     cd "$FUZZER/afl"
     CC=clang make -j $(nproc)
+    cd "$FUZZER/afl/utils/aflpp_driver"
+    make
+)
+
+# build AFL-symcts
+(
+    cd "$FUZZER/afl-symcts"
+    CC=clang make -j $(nproc) -k || true
+    cd "$FUZZER/afl-symcts/utils/aflpp_driver"
+    make
 )
 
 # build SyMCTS
@@ -126,11 +141,13 @@ if [[ "$FUZZER" == *"symcts"* ]]; then
         cd "$FUZZER/mctsse/implementation/libfuzzer_stb_image_symcts/runtime"
         cargo build --release
         cd "$FUZZER/mctsse/implementation/libfuzzer_stb_image_symcts/fuzzer"
+
+        FEATURES=()
         if [[ "$FUZZER" == *"afl"* ]]; then
-            cargo build --release --features=sync_from_other_fuzzers
-        else
-            cargo build --release
+            FEATURES+=("--features=sync_from_other_fuzzers")
         fi
+
+        cargo build --release "${FEATURES[@]}"
     )
 fi
 
@@ -194,19 +211,21 @@ fi
 
 # compile afl_driver.cpp
 
-clang++ $CXXFLAGS -std=c++11 -c -fPIC \
-    "$FUZZER/afl/afl_driver.cpp" -o "$OUT/vanilla/afl_driver.o"
+# build vanilla version (no instrumentation)
+clang $CXXFLAGS -c -fPIC \
+    -I"$FUZZER/afl-symcts/include" -I"$FUZZER/afl-symcts/utils/aflpp_driver" \
+    "$FUZZER/afl-symcts/utils/aflpp_driver/aflpp_driver.c" -o "$OUT/vanilla/afl_driver.o"
 
-"$FUZZER/afl/afl-clang-fast++" $CXXFLAGS -std=c++11 -c -fPIC \
-    "$FUZZER/afl/afl_driver.cpp" -o "$OUT/afl/afl_driver.o"
-
-AFL_LLVM_CMPLOG=1 "$FUZZER/afl/afl-clang-fast++" $CXXFLAGS -std=c++11 -c -fPIC \
-    "$FUZZER/afl/afl_driver.cpp" -o "$OUT/cmplog/afl_driver.o"
+# afl uses an uninstrumented version of the driver, so simply copy it a few times
+cp "$OUT/vanilla/afl_driver.o" "$OUT/afl/afl_driver.o"
+cp "$OUT/vanilla/afl_driver.o" "$OUT/afl-symcts/afl_driver.o"
+cp "$OUT/vanilla/afl_driver.o" "$OUT/cmplog/afl_driver.o"
 
 if [[ "$FUZZER" == *"sym"* ]]; then
     export SYMCC_LIBCXX_PATH="$FUZZER/llvm/libcxx_symcc_install"
-    "$FUZZER/symcc/build/sym++" $CXXFLAGS -std=c++11 -c -fPIC \
+    "$FUZZER/symcc/build/symcc" $CXXFLAGS -c -fPIC \
         "$FUZZER/mctsse/repos/symcc_libc_preload/libc_symcc_preload.a" \
         "$OUT/symcts/libz.a" \
-        "$FUZZER/afl/afl_driver.cpp" -o "$OUT/symcts/afl_driver.o"
+        -I"$FUZZER/afl-symcts/include" -I"$FUZZER/afl-symcts/utils/aflpp_driver" \
+        "$FUZZER/afl-symcts/utils/aflpp_driver/aflpp_driver.c" -o "$OUT/symcts/afl_driver.o"
 fi
