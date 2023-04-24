@@ -28,14 +28,21 @@ git clone https://github.com/AFLPlusPlus/AFLPlusPlus.git "$FUZZER/afl"
 
 git clone -b feat/larger_counters https://github.com/Lukas-Dresel/AFLPlusPlus.git "$FUZZER/afl-symcts"
 
-# if [[ "$FUZZER" == *"symcts"* ]]; then
+if [[ "$FUZZER" == *"symcts"* ]]; then
 git clone --depth=1 https://github.com/Lukas-Dresel/symcc "$FUZZER/symcc"
-# fi
+else
+git clone --depth=1 https://github.com/eurecom-s3/symcc "$FUZZER/symcc"
+fi
+
 git -C "$FUZZER/symcc" submodule init
 git -C "$FUZZER/symcc" submodule update
 
 if [[ "$FUZZER" == *"symqemu"* ]]; then
-    git clone --depth=1 https://github.com/Lukas-Dresel/symqemu "$FUZZER/symqemu"
+    if [[ "$FUZZER" == *"symcts"* ]]; then
+        git clone --depth=1 https://github.com/Lukas-Dresel/symqemu "$FUZZER/symqemu"
+    else
+        git clone --depth=1 https://github.com/eurecom-s3/symqemu "$FUZZER/symqemu"
+    fi
 fi
 if [[ "$FUZZR" == *"symsan"* ]]; then
     # git clone --depth=1 https://github.com/R-Fuzz/symsan "$FUZZER/symsan"

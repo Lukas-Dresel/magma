@@ -6,9 +6,8 @@ set -e
 VARIANTS=(afl_companion symcc_afl symqemu_afl)
 VARIANTS+=(symcts symcts_afl)
 VARIANTS+=(symcts_symqemu symcts_symqemu_afl)
-VARIANTS+=(symcts_context_sensitive symcts_decision_coverage)
 
-FILES=(build.sh fetch.sh findings.sh instrument.sh preinstall.sh run.sh runonce.sh src/afl_driver.cpp)
+FILES=(build.sh fetch.sh findings.sh instrument.sh preinstall.sh run.sh runonce.sh)
 
 for VARIANT in "${VARIANTS[@]}"; do
     echo "Creating variant $VARIANT"
