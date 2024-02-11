@@ -38,6 +38,34 @@ EXPERIMENT PARAMETERS WILL BE LISTED HERE
 
 <div class="section">
     <h1>Experiment Summary</h1>
+    <div id="bugs-reached">
+        <h2>Total Unique Bugs Reached</h2>
+        <ul class="collapsible popout">
+            <li>
+                <div class="collapsible-header">
+                    <h3>Mean and Standard Deviation</h3>
+                </div>
+                <div class="collapsible-body">
+                    This plot shows the mean number of unique bugs reached by every fuzzer against every target,
+                    and the standard deviation bar, across all campaigns.
+                </div>
+            </li>
+        </ul>
+        <img class="materialboxed responsive-img" src="{{ uniq_bugs_reached }}">
+        <ul class="collapsible popout">
+            <li>
+                <div class="collapsible-header">
+                    <h3>Stastistical Significance</h3>
+                </div>
+                <div class="collapsible-body">
+                    This matrix summarizes the p-values of the pairwise Mann-Whitney U tests calculated against the
+                    total bug count sample sets collected for every fuzzer across all campaigns. Cells with a green
+                    shade indicate that the number of bugs reached by a fuzzer is statistically different.
+                </div>
+            </li>
+        </ul>
+        <img class="materialboxed responsive-img" src="{{ sigmatrix_reached }}">
+    </div>
     <div id="bugs-triggered">
         <h2>Total Unique Bugs Triggered</h2>
         <ul class="collapsible popout">

@@ -9,6 +9,18 @@ from ReportGeneration import generate_report
 import argparse
 import logging
 
+def parse_timelimit(timelimit):
+    if timelimit.endswith('d'):
+        return int(timelimit[:-1]) * 24 * 60 * 60
+    elif timelimit.endswith('h'):
+        return int(timelimit[:-1]) * 60 * 60
+    elif timelimit.endswith('m'):
+        return int(timelimit[:-1]) * 60
+    elif timelimit.endswith('s'):
+        return int(timelimit[:-1])
+    else:
+        return int(timelimit)
+
 def parse_args():
     parser = argparse.ArgumentParser(description=(
         "Creates detailed plots from experiment summary and generates a report "
@@ -38,8 +50,10 @@ def configure_verbosity(level):
 def main():
     args = parse_args()
     configure_verbosity(args.verbose)
-    bd = BenchmarkData(args.json, config={'duration': 7 * 24 * 60 * 60, 'trials': 10})
+    bd = BenchmarkData(args.json, config={'duration': 2 * 24 * 60 * 60, 'trials': 3})
     generate_report(bd, args.outdir)
 
 if __name__ == '__main__':
-    main()
+    import ipdb
+    with ipdb.slaunch_ipdb_on_exception():
+        main()

@@ -67,7 +67,7 @@ def expected_time_to_trigger(bd, outdir):
     plt.close()
     return path
 
-def unique_bugs_per_target(bd, outdir, metric, libraries=None, symmetric=False, ncols=3):
+def unique_bugs_per_target(bd, outdir, metric: Metric, libraries=None, symmetric=False, ncols=3):
     """
     Creates a 2D array plot representing the statistical significance
     between every pair of fuzzers on a target libary
@@ -83,6 +83,7 @@ def unique_bugs_per_target(bd, outdir, metric, libraries=None, symmetric=False, 
     """
 
     unique_bugs, _, p_values = DataProcessing.unique_bugs_per_target_data(bd, metric)
+    p_values: pd.DataFrame
 
     #If there is no target as argument we compute the plot for every fuzzer
     all_libraries = bd.get_all_targets()
@@ -96,22 +97,25 @@ def unique_bugs_per_target(bd, outdir, metric, libraries=None, symmetric=False, 
     nrows = (len(libraries) - 1) // ncols + 1
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(12, 12), squeeze=False)
 
+    # import ipdb; ipdb.set_trace()
     for target, ax in zip(libraries, axs.flat):
-        lib_data = p_values.xs(target, level='Target', drop_level=True)
-        # maintain symmetry by removing "extra" fuzzers
-        lib_data = lib_data.transpose().reindex(lib_data.index)
+        try:
+            ax.set_title(target)
+            lib_data = p_values.xs(target, level='Target', drop_level=True)
+            # maintain symmetry by removing "extra" fuzzers
+            lib_data = lib_data.transpose().reindex(lib_data.index)
 
-        heatmap_plot(lib_data, symmetric=symmetric, axes=ax, labels=False, \
-            cbar_ax_bbox=[1, 0.4, 0.02, 0.2])
-
-        ax.set_title(target)
+            heatmap_plot(lib_data, symmetric=symmetric, axes=ax, labels=False, \
+                cbar_ax_bbox=[1, 0.4, 0.02, 0.2])
+        except KeyError:
+            pass
         # axes.get_yaxis().set_visible(False)
 
     for ax in axs.flat[len(libraries):]:
         fig.delaxes(ax)
-    fig.tight_layout(pad=2.0)
+    # fig.tight_layout(pad=2.0)
 
-    sigmatrix, path = output(outdir, 'plot', 'summary_signplot.svg')
+    sigmatrix, path = output(outdir, 'plot', f'summary_signplot_{metric}.svg')
     fig.savefig(path, bbox_inches='tight')
 
     fig, ax = plt.subplots(figsize=(12, 6))
@@ -127,7 +131,7 @@ def unique_bugs_per_target(bd, outdir, metric, libraries=None, symmetric=False, 
     ax.set_xlabel("Targets")
     ax.set_xticklabels(ax.get_xticklabels(), rotation=0)
 
-    barplot, path = output(outdir, 'plot', 'summary_unique_bugs.svg')
+    barplot, path = output(outdir, 'plot', f'summary_unique_bugs_{metric}.svg')
     fig.savefig(path, bbox_inches='tight')
     plt.close()
     return barplot, sigmatrix
@@ -246,7 +250,8 @@ def bug_survival_plots(bd, outdir):
     MARKERS = ('.', '>')
     LINESTYLES = (':', '-')
     COLORS = tuple(c['color'] for c in
-                   plt.rcParams['axes.prop_cycle'][:len(FUZZERS)])
+                   ((list(plt.rcParams['axes.prop_cycle']) + [{'color': "crimson"}, {'color': "indigo"}]) [:len(FUZZERS)]))
+    assert len(COLORS) == len(FUZZERS)
 
     metric_markers = dict(zip(METRICS, MARKERS))
     metric_linestyles = dict(zip(METRICS, LINESTYLES))

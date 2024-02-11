@@ -58,6 +58,8 @@ def generate_report(bd, outdir, report_title="Report", **kwargs):
 
     boxplots = MatplotlibPlotter.bug_metric_boxplot(bd, outdir)
     uniq_bugs, sigmatrix = MatplotlibPlotter.unique_bugs_per_target(bd, outdir, Metric.TRIGGERED.value)
+    uniq_bugs_reached, sigmatrix_reached = MatplotlibPlotter.unique_bugs_per_target(bd, outdir, Metric.REACHED.value)
+
     ett = MatplotlibPlotter.expected_time_to_trigger(bd, outdir)
     survplots, survlegend, survtable, hiliter_css, heatmap_css = MatplotlibPlotter.bug_survival_plots(bd, outdir)
     ppool = locals()
@@ -71,6 +73,7 @@ def generate_report(bd, outdir, report_title="Report", **kwargs):
     main = generate_main_page(bd, base_template, env,
         **{k: ppool[k] for k in
             ppool.keys() & {
+                              'uniq_bugs_reached', 'sigmatrix_reached',
                               'uniq_bugs', 'sigmatrix', 'ett',
                               'survtable', 'hiliter_css', 'heatmap_css',
                               'report_title'
